@@ -19,8 +19,9 @@ def connect():
 
 
 INSERT_SQL = """
-INSERT INTO events (ts, src_ip, src_port, dst_port, service, event_type, username, password)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+INSERT INTO events (ts, src_ip, src_port, dst_port, service, event_type, username, password,
+                    country, city, lat, lon, asn, org)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 ON CONFLICT DO NOTHING
 """
 
@@ -39,6 +40,12 @@ def insert_event(conn, event):
                 event.event_type,
                 event.username,
                 event.password,
+                event.country,
+                event.city,
+                event.lat,
+                event.lon,
+                event.asn,
+                event.org,
             ),
         )
         return cur.rowcount

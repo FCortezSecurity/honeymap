@@ -3,13 +3,18 @@ import sys
 sys.path.insert(0, "src")
 
 from honeymap.db import connect, insert_event
+from honeymap.enrich import GeoLookup, enrich_event
 from honeymap.normalize import ParseError, parse_line
 
+path = sys.argv[1] if len(sys.argv) > 1 else "data/logs/opencanary.log"
+geo = GeoLookup("data/geoip/dbip-city-lite.mmdb", "data/geoip/dbip-asn-lite.mmdb")
+
 new_rows = 0
+located = 0
 status_lines = 0
 rejected = 0
 
-with connect() as conn, open("data/logs/opencanary.log") as f:
+with connect() as conn, open(path) as f:
     for number, line in enumerate(f, start=1):
         try:
             event = parse_line(line)
@@ -20,6 +25,9 @@ with connect() as conn, open("data/logs/opencanary.log") as f:
         if event is None:
             status_lines += 1
             continue
+        event = enrich_event(event, geo.lookup)
+        if event.lat is not None:
+            located += 1
         new_rows += insert_event(conn, event)
 
-print(f"new_rows={new_rows} status_lines={status_lines} rejected={rejected}")
+print(f"{path}: new_rows={new_rows} located={located} status_lines={status_lines} rejected={rejected}")
