@@ -10,6 +10,7 @@ class ParseError(ValueError):
 
 LOGTYPES = {
     4002: "ssh",
+    3000: "http",
     3001: "http",
     2000: "ftp",
     6001: "telnet",
