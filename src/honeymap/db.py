@@ -65,3 +65,28 @@ def fetch_events(conn):
         )
         for ts, src_ip, src_port, dst_port, service, event_type, username, password in rows
     ]
+
+
+ALERT_SQL = """
+INSERT INTO alerts (rule, severity, src_ip, service, first_seen, last_seen, event_count)
+VALUES (%s, %s, %s, %s, %s, %s, %s)
+ON CONFLICT DO NOTHING
+"""
+
+
+def insert_alert(conn, alert):
+    """Store one alert. Returns 1 if it was new, 0 if it was already stored."""
+    with conn.cursor() as cur:
+        cur.execute(
+            ALERT_SQL,
+            (
+                alert.rule,
+                alert.severity,
+                alert.src_ip,
+                alert.service,
+                alert.first_seen,
+                alert.last_seen,
+                alert.event_count,
+            ),
+        )
+        return cur.rowcount
