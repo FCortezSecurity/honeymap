@@ -56,6 +56,14 @@ for _ in range(5):
         ts = burst_start + timedelta(seconds=i * rng.uniform(0.5, 5))
         lines.append((ts, make_line(ts, ip, service)))
 
+# Scanners: one IP touching every service within seconds
+for _ in range(4):
+    ip = random_public_ip()
+    scan_start = start + timedelta(seconds=rng.random() * span)
+    for i, service in enumerate(SERVICES):
+        ts = scan_start + timedelta(seconds=i * rng.uniform(3, 8))
+        lines.append((ts, make_line(ts, ip, service)))
+
 lines.sort()
 out = Path("data/logs/demo.log")
 out.write_text("\n".join(line for _, line in lines) + "\n")
