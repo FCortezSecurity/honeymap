@@ -18,6 +18,8 @@ class Event:
     lon: float | None = None
     asn: int | None = None
     org: str | None = None
+    source: str = "live"
+
 
 @dataclass(frozen=True)
 class Alert:
@@ -28,3 +30,4 @@ class Alert:
     first_seen: datetime
     last_seen: datetime
     event_count: int
+    source: str = "live"

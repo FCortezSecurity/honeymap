@@ -1,3 +1,4 @@
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
 from honeymap.detect import find_brute_force
@@ -28,6 +29,18 @@ def test_fast_burst_raises_one_alert():
     assert alerts[0].src_ip == "45.1.2.3"
     assert alerts[0].event_count == 20
 
+
 def test_slow_attempts_raise_no_alert():
     alerts = find_brute_force(make_attempts(20, seconds_apart=600))
     assert alerts == []
+
+
+def test_alert_inherits_source_from_events():
+    attempts = [replace(e, source="demo") for e in make_attempts(20, seconds_apart=1)]
+    alerts = find_brute_force(attempts)
+    assert alerts[0].source == "demo"
+
+
+def test_alert_defaults_to_live():
+    alerts = find_brute_force(make_attempts(20, seconds_apart=1))
+    assert alerts[0].source == "live"

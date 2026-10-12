@@ -20,8 +20,8 @@ def connect():
 
 INSERT_SQL = """
 INSERT INTO events (ts, src_ip, src_port, dst_port, service, event_type, username, password,
-                    country, city, lat, lon, asn, org)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    country, city, lat, lon, asn, org, source)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 ON CONFLICT DO NOTHING
 """
 
@@ -46,6 +46,7 @@ def insert_event(conn, event):
                 event.lon,
                 event.asn,
                 event.org,
+                event.source,
             ),
         )
         return cur.rowcount
@@ -55,7 +56,8 @@ def fetch_events(conn):
     """Read every stored event back out of the database, oldest first."""
     with conn.cursor() as cur:
         cur.execute(
-            "SELECT ts, src_ip, src_port, dst_port, service, event_type, username, password "
+            "SELECT ts, src_ip, src_port, dst_port, service, event_type, "
+            "username, password, source "
             "FROM events ORDER BY ts"
         )
         rows = cur.fetchall()
@@ -69,14 +71,15 @@ def fetch_events(conn):
             event_type=event_type,
             username=username,
             password=password,
+            source=source,
         )
-        for ts, src_ip, src_port, dst_port, service, event_type, username, password in rows
+        for ts, src_ip, src_port, dst_port, service, event_type, username, password, source in rows
     ]
 
 
 ALERT_SQL = """
-INSERT INTO alerts (rule, severity, src_ip, service, first_seen, last_seen, event_count)
-VALUES (%s, %s, %s, %s, %s, %s, %s)
+INSERT INTO alerts (rule, severity, src_ip, service, first_seen, last_seen, event_count, source)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
 ON CONFLICT DO NOTHING
 """
 
@@ -94,6 +97,7 @@ def insert_alert(conn, alert):
                 alert.first_seen,
                 alert.last_seen,
                 alert.event_count,
+                alert.source,
             ),
         )
         return cur.rowcount

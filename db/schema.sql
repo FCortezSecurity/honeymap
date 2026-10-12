@@ -18,3 +18,6 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 CREATE INDEX IF NOT EXISTS idx_events_ts ON events (ts DESC);
+ALTER TABLE events ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'live' CHECK (source IN ('live', 'demo'));
+
+ALTER TABLE events ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'live' CHECK (source IN ('live', 'demo'));

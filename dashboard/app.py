@@ -3,12 +3,14 @@ import sys
 sys.path.insert(0, "src")
 
 import pandas as pd
+import plotly.express as px
 import streamlit as st
 
 from honeymap.db import connect
 
 st.set_page_config(page_title="HoneyMap", layout="wide")
 st.title("🍯 HoneyMap")
+st.caption("IP geolocation is an estimate, not a physical location.")
 
 
 def load(sql):
@@ -19,18 +21,63 @@ def load(sql):
 
 
 events = load(
-    "SELECT ts, src_ip, service, event_type, username, password "
-    "FROM events ORDER BY ts DESC LIMIT 1000"
+    "SELECT ts, src_ip, service, event_type, username, password, country, city, lat, lon "
+    "FROM events ORDER BY ts DESC LIMIT 2000"
 )
 alerts = load(
     "SELECT first_seen, severity, rule, src_ip, service, event_count "
     "FROM alerts ORDER BY first_seen DESC"
 )
+places = load(
+    "SELECT country, city, lat, lon, count(*) AS events, count(DISTINCT src_ip) AS sources "
+    "FROM events WHERE lat IS NOT NULL GROUP BY country, city, lat, lon"
+)
+timeline = load(
+    "SELECT date_trunc('hour', ts) AS hour, service, count(*) AS events "
+    "FROM events GROUP BY 1, 2 ORDER BY 1"
+)
 
-col1, col2, col3 = st.columns(3)
+located = events["lat"].notna().mean() if len(events) else 0
+
+col1, col2, col3, col4 = st.columns(4)
 col1.metric("Events", len(events))
 col2.metric("Sources", events["src_ip"].nunique())
 col3.metric("Alerts", len(alerts))
+col4.metric("Coverage", f"{located:.0%}", help="Share of events with a location")
+
+st.subheader("Global activity")
+if places.empty:
+    st.info("No located events yet.")
+else:
+    places["city"] = places["city"].fillna("Unknown city")
+    fig = px.scatter_geo(
+        places,
+        lat="lat",
+        lon="lon",
+        size="events",
+        hover_name="city",
+        hover_data={"country": True, "events": True, "sources": True, "lat": False, "lon": False},
+        projection="natural earth",
+        size_max=35,
+        template="plotly_dark",
+    )
+    fig.update_layout(height=500, margin=dict(l=0, r=0, t=0, b=0))
+    st.plotly_chart(fig, width="stretch")
+
+left, right = st.columns([3, 2])
+with left:
+    st.subheader("Activity over time")
+    st.plotly_chart(
+        px.bar(timeline, x="hour", y="events", color="service", template="plotly_dark"),
+        width="stretch",
+    )
+with right:
+    st.subheader("Top countries")
+    top = (
+        places.groupby("country", as_index=False)["events"].sum()
+        .sort_values("events", ascending=False).head(8)
+    )
+    st.dataframe(top, hide_index=True)
 
 st.subheader("Detection alerts")
 st.dataframe(alerts, hide_index=True)

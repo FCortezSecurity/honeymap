@@ -33,6 +33,7 @@ def find_brute_force(events, threshold=10, window=timedelta(minutes=5)):
                         first_seen=attempts[i].ts,
                         last_seen=attempts[j].ts,
                         event_count=count,
+                        source=attempts[i].source,
                     )
                 )
                 i = j + 1  # skip past this burst so it's one alert, not many
