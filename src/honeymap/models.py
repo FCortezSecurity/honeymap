@@ -18,3 +18,13 @@ class Event:
     lon: float | None = None
     asn: int | None = None
     org: str | None = None
+
+@dataclass(frozen=True)
+class Alert:
+    rule: str
+    severity: str
+    src_ip: str
+    service: str
+    first_seen: datetime
+    last_seen: datetime
+    event_count: int
