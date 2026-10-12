@@ -3,6 +3,8 @@ import os
 import psycopg
 from dotenv import load_dotenv
 
+from .models import Event
+
 load_dotenv()
 
 
@@ -40,3 +42,26 @@ def insert_event(conn, event):
             ),
         )
         return cur.rowcount
+
+
+def fetch_events(conn):
+    """Read every stored event back out of the database, oldest first."""
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT ts, src_ip, src_port, dst_port, service, event_type, username, password "
+            "FROM events ORDER BY ts"
+        )
+        rows = cur.fetchall()
+    return [
+        Event(
+            ts=ts,
+            src_ip=src_ip,
+            src_port=src_port,
+            dst_port=dst_port,
+            service=service,
+            event_type=event_type,
+            username=username,
+            password=password,
+        )
+        for ts, src_ip, src_port, dst_port, service, event_type, username, password in rows
+    ]
