@@ -8,18 +8,19 @@ class ParseError(ValueError):
     """A log line we couldn't understand."""
 
 
+# logtype -> (service, event_type)
 LOGTYPES = {
-    4002: "ssh",
-    3000: "http",
-    3001: "http",
-    2000: "ftp",
-    6001: "telnet",
-    8001: "mysql",
+    4002: ("ssh", "login_attempt"),
+    3000: ("http", "request"),
+    3001: ("http", "login_attempt"),
+    2000: ("ftp", "login_attempt"),
+    6001: ("telnet", "login_attempt"),
+    8001: ("mysql", "login_attempt"),
 }
 
 
-def service_for(logtype):
-    return LOGTYPES.get(logtype, "other")
+def classify(logtype):
+    return LOGTYPES.get(logtype, ("other", "other"))
 
 
 def parse_line(line):
@@ -36,13 +37,15 @@ def parse_line(line):
 
         ts = datetime.fromisoformat(record["utc_time"]).replace(tzinfo=timezone.utc)
         logdata = record["logdata"]
+        service, event_type = classify(logtype)
 
         return Event(
             ts=ts,
             src_ip=record["src_host"],
             src_port=record["src_port"],
             dst_port=record["dst_port"],
-            service=service_for(logtype),
+            service=service,
+            event_type=event_type,
             username=logdata.get("USERNAME"),
             password=logdata.get("PASSWORD"),
         )

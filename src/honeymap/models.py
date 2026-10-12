@@ -9,6 +9,7 @@ class Event:
     src_port: int
     dst_port: int
     service: str
+    event_type: str
     username: str | None = None
     password: str | None = None
     country: str | None = None
