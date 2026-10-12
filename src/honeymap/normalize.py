@@ -3,6 +3,11 @@ from datetime import datetime, timezone
 
 from .models import Event
 
+
+class ParseError(ValueError):
+    """A log line we couldn't understand."""
+
+
 LOGTYPES = {
     4002: "ssh",
     3001: "http",
@@ -15,8 +20,13 @@ LOGTYPES = {
 def service_for(logtype):
     return LOGTYPES.get(logtype, "other")
 
+
 def parse_line(line):
-    record = json.loads(line)
+    try:
+        record = json.loads(line)
+    except json.JSONDecodeError:
+        raise ParseError("not valid JSON")
+
     logtype = record["logtype"]
 
     if 1000 <= logtype <= 1099:
