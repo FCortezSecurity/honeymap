@@ -41,3 +41,41 @@ def find_brute_force(events, threshold=10, window=timedelta(minutes=5)):
                 i += 1
 
     return alerts
+
+
+def find_multi_service(events, threshold=3, window=timedelta(minutes=30)):
+    """Flag one IP that touches `threshold` different services within `window`."""
+    by_ip = defaultdict(list)
+    for event in events:
+        by_ip[event.src_ip].append(event)
+
+    alerts = []
+    for ip, items in by_ip.items():
+        items.sort(key=lambda e: e.ts)
+
+        i = 0
+        while i < len(items):
+            j = i
+            services = {items[i].service}
+            while j + 1 < len(items) and items[j + 1].ts - items[i].ts <= window:
+                j += 1
+                services.add(items[j].service)
+
+            if len(services) >= threshold:
+                alerts.append(
+                    Alert(
+                        rule="multi_service_targeting",
+                        severity="low",
+                        src_ip=ip,
+                        service="multiple",
+                        first_seen=items[i].ts,
+                        last_seen=items[j].ts,
+                        event_count=j - i + 1,
+                        source=items[i].source,
+                    )
+                )
+                i = j + 1
+            else:
+                i += 1
+
+    return alerts
