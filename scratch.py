@@ -1,6 +1,9 @@
-import json
+import sys
+
+sys.path.insert(0, "src")
+
+from honeymap.normalize import parse_line
 
 with open("data/logs/sample.log") as f:
     for line in f:
-        record = json.loads(line)
-        print(record["src_host"], record["dst_port"], record["logtype"])
+        print(parse_line(line))
