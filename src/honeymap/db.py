@@ -10,7 +10,7 @@ load_dotenv()
 
 def connect():
     return psycopg.connect(
-        host="localhost",
+        host=os.environ.get("DB_HOST", "localhost"),
         port=5432,
         dbname="honeymap",
         user="honeymap",
@@ -80,7 +80,11 @@ def fetch_events(conn):
 ALERT_SQL = """
 INSERT INTO alerts (rule, severity, src_ip, service, first_seen, last_seen, event_count, source)
 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-ON CONFLICT DO NOTHING
+ON CONFLICT (rule, src_ip, service, first_seen) DO UPDATE SET
+    last_seen = EXCLUDED.last_seen,
+    event_count = EXCLUDED.event_count,
+    severity = EXCLUDED.severity
+WHERE alerts.event_count <> EXCLUDED.event_count
 """
 
 
