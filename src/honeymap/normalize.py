@@ -27,20 +27,23 @@ def parse_line(line):
     except json.JSONDecodeError:
         raise ParseError("not valid JSON")
 
-    logtype = record["logtype"]
+    try:
+        logtype = record["logtype"]
 
-    if 1000 <= logtype <= 1099:
-        return None  # OpenCanary's own status message, not an attack
+        if 1000 <= logtype <= 1099:
+            return None  # OpenCanary's own status message, not an attack
 
-    ts = datetime.fromisoformat(record["utc_time"]).replace(tzinfo=timezone.utc)
-    logdata = record["logdata"]
+        ts = datetime.fromisoformat(record["utc_time"]).replace(tzinfo=timezone.utc)
+        logdata = record["logdata"]
 
-    return Event(
-        ts=ts,
-        src_ip=record["src_host"],
-        src_port=record["src_port"],
-        dst_port=record["dst_port"],
-        service=service_for(logtype),
-        username=logdata.get("USERNAME"),
-        password=logdata.get("PASSWORD"),
-    )
+        return Event(
+            ts=ts,
+            src_ip=record["src_host"],
+            src_port=record["src_port"],
+            dst_port=record["dst_port"],
+            service=service_for(logtype),
+            username=logdata.get("USERNAME"),
+            password=logdata.get("PASSWORD"),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ParseError(f"bad record: {error!r}")
