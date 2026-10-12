@@ -8,3 +8,17 @@ services:
       - "127.0.0.1:2222:2222"
       - "127.0.0.1:8080:8080"
       - "127.0.0.1:2121:2121"
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: honeymap
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: honeymap
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+
+volumes:
+  pgdata:
