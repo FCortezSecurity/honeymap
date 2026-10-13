@@ -34,12 +34,12 @@ A honeypot threat-intelligence pipeline. Decoy services collect hostile traffic,
 ## How it works
 
 ```mermaid
-flowchart LR
-    A[Internet or test clients] --> B[OpenCanary honeypot<br/>SSH, HTTP, FTP]
+flowchart TD
+    A[Test clients or internet] --> B[OpenCanary honeypot]
     B --> C[(JSON log file)]
     C --> D[Ingest worker]
     D --> E[Parse and validate]
-    E --> F[Enrich: DB-IP Lite]
+    E --> F[Enrich with GeoIP]
     F --> G[(PostgreSQL)]
     G --> H[Detection rules]
     H --> G
