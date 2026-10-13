@@ -34,6 +34,7 @@ def find_brute_force(events, threshold=10, window=timedelta(minutes=5)):
                         last_seen=attempts[j].ts,
                         event_count=count,
                         source=attempts[i].source,
+                        mitre_id="T1110",
                     )
                 )
                 i = j + 1  # skip past this burst so it's one alert, not many
@@ -72,6 +73,7 @@ def find_multi_service(events, threshold=3, window=timedelta(minutes=30)):
                         last_seen=items[j].ts,
                         event_count=j - i + 1,
                         source=items[i].source,
+                        mitre_id="T1595",
                     )
                 )
                 i = j + 1

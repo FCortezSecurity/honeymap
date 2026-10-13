@@ -31,3 +31,4 @@ class Alert:
     last_seen: datetime
     event_count: int
     source: str = "live"
+    mitre_id: str | None = None

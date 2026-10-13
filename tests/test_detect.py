@@ -76,3 +76,13 @@ def test_one_service_repeated_is_not_a_sweep():
 def test_slow_sweep_raises_no_alert():
     alerts = find_multi_service(make_probes(["ssh", "http", "ftp"], seconds_apart=3600))
     assert alerts == []
+
+
+def test_brute_force_alert_is_tagged_t1110():
+    alerts = find_brute_force(make_attempts(20, seconds_apart=1))
+    assert alerts[0].mitre_id == "T1110"
+
+
+def test_multi_service_alert_is_tagged_t1595():
+    alerts = find_multi_service(make_probes(["ssh", "http", "ftp"], seconds_apart=10))
+    assert alerts[0].mitre_id == "T1595"
