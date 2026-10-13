@@ -12,3 +12,5 @@ CREATE TABLE IF NOT EXISTS alerts (
 ALTER TABLE alerts ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'live' CHECK (source IN ('live', 'demo'));
 
 ALTER TABLE alerts ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'live' CHECK (source IN ('live', 'demo'));
+
+ALTER TABLE alerts ADD COLUMN IF NOT EXISTS mitre_id TEXT;

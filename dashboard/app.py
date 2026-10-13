@@ -44,7 +44,7 @@ stats = load(
     (sources,),
 )
 alerts = load(
-    "SELECT first_seen, severity, rule, src_ip, service, event_count, source "
+        "SELECT first_seen, severity, rule, mitre_id, src_ip, service, event_count, source "
     "FROM alerts WHERE source = ANY(%s) ORDER BY first_seen DESC",
     (sources,),
 )

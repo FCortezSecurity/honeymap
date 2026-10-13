@@ -78,18 +78,21 @@ def fetch_events(conn):
 
 
 ALERT_SQL = """
-INSERT INTO alerts (rule, severity, src_ip, service, first_seen, last_seen, event_count, source)
-VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+INSERT INTO alerts (rule, severity, src_ip, service, first_seen, last_seen, event_count,
+                    source, mitre_id)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
 ON CONFLICT (rule, src_ip, service, first_seen) DO UPDATE SET
     last_seen = EXCLUDED.last_seen,
     event_count = EXCLUDED.event_count,
-    severity = EXCLUDED.severity
+    severity = EXCLUDED.severity,
+    mitre_id = EXCLUDED.mitre_id
 WHERE alerts.event_count <> EXCLUDED.event_count
+   OR alerts.mitre_id IS DISTINCT FROM EXCLUDED.mitre_id
 """
 
 
 def insert_alert(conn, alert):
-    """Store one alert. Returns 1 if it was new, 0 if it was already stored."""
+    """Store one alert. Returns 1 if it was new or changed, 0 if nothing changed."""
     with conn.cursor() as cur:
         cur.execute(
             ALERT_SQL,
@@ -102,6 +105,7 @@ def insert_alert(conn, alert):
                 alert.last_seen,
                 alert.event_count,
                 alert.source,
+                alert.mitre_id,
             ),
         )
         return cur.rowcount
