@@ -31,7 +31,7 @@ A honeypot threat-intelligence pipeline. Decoy services collect hostile traffic,
 | Storage | Events and alerts, with database constraints that block duplicates | PostgreSQL |
 | Dashboard | Metrics, world map, timeline, top countries, alerts, recent events, live/demo filter | Streamlit, Plotly |
 | Delivery | One command starts honeypot, database, ingest worker and dashboard | Docker Compose |
-| Quality | 20 unit tests, tests run on every push | pytest, GitHub Actions |
+| Quality | 22 unit tests, tests run on every push | pytest, GitHub Actions |
 
 ## How it works
 
@@ -59,10 +59,10 @@ The ingest worker remembers a byte offset in the log file, so each cycle reads o
 
 ## Detection rules
 
-| Rule | Fires when | Severity |
-|---|---|---|
-| `brute_force` | 10 or more login attempts from one IP against one service within 5 minutes of the burst's first attempt | medium, high at 50 or more |
-| `multi_service_targeting` | one IP touches 3 or more different services within 30 minutes | low |
+| Rule | MITRE ATT&CK | Fires when | Severity |
+|---|---|---|---|
+| `brute_force` | [T1110](https://attack.mitre.org/techniques/T1110/) Brute Force | 10 or more login attempts from one IP against one service within 5 minutes of the burst's first attempt | medium, high at 50 or more |
+| `multi_service_targeting` | [T1595](https://attack.mitre.org/techniques/T1595/) Active Scanning | one IP touches 3 or more different services within 30 minutes | low |
 
 Only `login_attempt` events count toward brute force, so someone loading the login page ten times does not trigger it. A sustained attack is **one alert that grows**, not hundreds of rows. Thresholds are function arguments in `src/honeymap/detect.py`.
 
@@ -107,7 +107,7 @@ pip install pytest
 pytest
 ```
 
-![20 tests passing: detection rules, enrichment and the log parser](docs/images/tests-passing.png)
+![22 tests passing: detection rules, enrichment and the log parser](docs/images/tests-passing.png)
 
 ![CI passing on GitHub Actions](docs/images/ci-green.png)
 
@@ -141,6 +141,7 @@ All of them are bound to `127.0.0.1`, so nothing outside your machine can reach 
 - **Global activity:** one circle per place, sized by event count. Hover for country, events and sources.
 - **Activity over time:** events per hour, stacked by service.
 - **Detection alerts and recent events:** with the live/demo label on every row.
+- **Investigate a source IP:** pick an address to see its location, services hit, alerts, most-tried usernames and every event it sent.
 
 ![Events over time by service, top countries, and the alerts table](docs/images/dashboard-activity.png)
 
@@ -186,13 +187,15 @@ Every one of these was hit for real while building the project, not anticipated 
 | The Docker build failed with `/requirements.txt: not found` | The file was not in the project root | Created it in the right place, and added a `.dockerignore` so `.env`, `.venv` and the GeoIP data never enter an image |
 | A fresh clone would start with an empty database and a crashing worker | I had created the tables by hand with `psql` | Mounted `db/` into `/docker-entrypoint-initdb.d`, and proved it by wiping the volume with `docker compose down -v` and rebuilding from nothing |
 | A port-scan rule could not be built | OpenCanary's scan logging needs host-level networking that Docker Desktop on Windows does not provide, and the honeypot has only three ports anyway | Built `multi_service_targeting` instead. Its alerts use the service name `multiple` rather than an empty value, because two `NULL`s never count as equal in a `UNIQUE` constraint |
+| After adding the MITRE field, existing alerts stayed untagged | The alert upsert only updated a row when its event count changed | Widened the update condition with `IS DISTINCT FROM`, so the running worker backfilled every old alert on its next cycle with no manual migration |
 
 ## Limitations
 
 - **Not yet exposed to the internet.** The only live data so far is my own test traffic. The map is populated by synthetic data. A real deployment belongs on a dedicated, disposable VM, never a personal machine or home network.
 - **IP geolocation is an estimate.** Country is fairly reliable, city is a rough hint, and the coordinates are the middle of a region. VPNs and cloud hosts make the point rarely match the attacker.
 - **Demo data skews toward the United States,** because random IPv4 addresses do, not because attackers prefer it.
-- **Two detection rules.** There is no port-scan detection, no MITRE ATT&CK tagging, and no per-IP investigation view yet.
+- **Two detection rules.** There is no port-scan detection yet.
+- **The investigation view reads from the 2,000 most recent events** the dashboard loads, so a very active IP could show only part of its history.
 - **The SSH decoy has not been exercised** in my testing. The HTTP decoy is the one I tested end to end.
 - **No authentication on the dashboard.** It relies on being bound to localhost. It displays captured credentials, so keep it off public interfaces.
 - **Detection re-reads every stored event each cycle,** which is fine at this scale and would need a time window for large datasets.
