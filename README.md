@@ -146,6 +146,10 @@ All of them are bound to `127.0.0.1`, so nothing outside your machine can reach 
 
 *Both live and demo data shown. The `source` column labels every row.*
 
+![Live-only view: no banner and no map points, with empty-state messages](docs/images/dashboard-live-only.png)
+
+*Live-only view. My own test traffic comes from a private Docker address, which has no location, so there is nothing to plot. The dashboard shows an empty state instead of inventing data.*
+
 ![Fake DiskStation login page served by the honeypot](docs/images/honeypot-login.png)
 
 *The HTTP decoy. Anything typed into this form is logged, which is why you should never type a real password into it.*
