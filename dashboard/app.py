@@ -119,3 +119,40 @@ st.dataframe(alerts, hide_index=True)
 
 st.subheader("Recent events")
 st.dataframe(events, hide_index=True)
+
+
+st.subheader("Investigate a source IP")
+if events.empty:
+    st.info("No events in this selection.")
+else:
+    ips = events["src_ip"].value_counts().index.tolist()
+    ip = st.selectbox("Source IP, most active first", ips)
+    ip_events = events[events["src_ip"] == ip]
+    ip_alerts = alerts[alerts["src_ip"] == ip]
+
+    first_row = ip_events.iloc[0]
+    if pd.notna(first_row["lat"]):
+        where = f"{first_row['city'] or 'Unknown city'}, {first_row['country']}"
+    else:
+        where = "No location (private or unknown address)"
+    labels = ", ".join(sorted(ip_events["source"].unique()))
+    st.caption(f"{where} | data label: {labels}")
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Events", len(ip_events))
+    c2.metric("Services hit", ip_events["service"].nunique())
+    c3.metric("Alerts", len(ip_alerts))
+    c4.metric("Distinct usernames", ip_events["username"].nunique())
+
+    st.markdown("**Most tried usernames**")
+    top_users = (
+        ip_events["username"].value_counts().head(5)
+        .rename_axis("username").reset_index(name="attempts")
+    )
+    st.dataframe(top_users, hide_index=True)
+
+    st.markdown("**Alerts for this IP**")
+    st.dataframe(ip_alerts, hide_index=True)
+
+    st.markdown("**Events from this IP**")
+    st.dataframe(ip_events, hide_index=True)
