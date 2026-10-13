@@ -66,5 +66,6 @@ for _ in range(4):
 
 lines.sort()
 out = Path("data/logs/demo.log")
+out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text("\n".join(line for _, line in lines) + "\n")
 print(f"wrote {len(lines)} synthetic events to {out}")

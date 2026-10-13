@@ -10,7 +10,10 @@ from honeymap.db import connect
 
 st.set_page_config(page_title="HoneyMap", layout="wide")
 st.title("🍯 HoneyMap")
-st.caption("IP geolocation is an estimate, not a physical location.")
+st.caption(
+    "IP geolocation is an estimate, not a physical location. "
+    "Location data by [DB-IP](https://db-ip.com)."
+)
 
 CHOICES = {
     "Live honeypot data": ["live"],
