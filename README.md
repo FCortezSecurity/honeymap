@@ -1,5 +1,7 @@
 # 🍯 HoneyMap
 
+![CI](https://github.com/FCortezSecurity/honeymap/actions/workflows/ci.yml/badge.svg)
+
 A honeypot threat-intelligence pipeline. Decoy services collect hostile traffic, a Python worker parses and enriches each event with location and network data, detection rules raise alerts, and a Streamlit dashboard shows everything on a world map. The whole stack starts with one `docker compose` command.
 
 ![HoneyMap dashboard: world map, metrics and the demo-data banner](docs/images/dashboard-map.png)
